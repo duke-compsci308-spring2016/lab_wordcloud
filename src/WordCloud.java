@@ -1,5 +1,6 @@
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +9,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -25,33 +28,32 @@ public class WordCloud {
     private static final int DEFAULT_MIN_FONT = 6;
     private static final int DEFAULT_INCREMENT = 4;
     private static final String DEFAULT_IGNORE_FILE = "common.txt";
-    // regular expression that represents one or more digits or punctuation
+    // key regular expressions
     private static final String PUNCTUATION = "[\\d\\p{Punct}]+";
+    private static final String END_OF_FILE = "\\z";
+    private static final String WHITESPACE = "\\s";
 
     // set of common words to ignore when displaying word cloud
     private Set<String> myCommonWords;
     // words and the number of times each appears in the file
-    private List<Entry<String, Integer>> myTagWords;
+    private List<Entry<String, Long>> myTagWords;
 
 
     /**
      * Constructs an empty WordCloud.
      */
     public WordCloud (Scanner ignoreWords) {
+        // this value should never be null
         myTagWords = new ArrayList<>();
-        myCommonWords = new HashSet<>();
         // create list of words that should not be included in final word counts
-        while (ignoreWords.hasNext()) {
-            myCommonWords.add(sanitize(ignoreWords.next()));
-        }
+        myCommonWords = new HashSet<>(readWords(ignoreWords));
     }
 
     /**
      * Create a word cloud from the given input.
      */
     public void makeCloud (Scanner input, int numWordsToKeep, int groupSize) {
-        countWords(input);
-        topWords(numWordsToKeep, groupSize);
+        myTagWords = topWords(countWords(input), numWordsToKeep, groupSize);
     }
 
     /**
@@ -59,54 +61,42 @@ public class WordCloud {
      */
     @Override
     public String toString () {
-        StringBuilder result = new StringBuilder();
-        result.append(HTMLPage.startPage(DEFAULT_NUM_GROUPS, DEFAULT_MIN_FONT, DEFAULT_INCREMENT));
-        for (Entry<String, Integer> word : myTagWords) {
-            result.append(HTMLPage.formatWord(word.getKey(), word.getValue()));
-        }
-        result.append(HTMLPage.endPage());
-        return result.toString();
+        return Stream.of(HTMLPage.startPage(DEFAULT_NUM_GROUPS, DEFAULT_MIN_FONT, DEFAULT_INCREMENT),
+                         myTagWords.stream()
+                                   .map(HTMLPage::formatWord)
+                                   .collect(Collectors.joining(" ")),
+                         HTMLPage.endPage())
+                     .collect(Collectors.joining("\n"));
     }
 
     // Reads given text file and counts non-common words it contains.
     // Each word read is converted to lower case with leading and trailing punctuation removed
     // before it is counted.
-    private void countWords (Scanner input) {
-        Map<String, Integer> wordCounts = new HashMap<>();
-        while (input.hasNext()) {
-            String word = sanitize(input.next());
-            if (isTaggable(word)) {
-                wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
+    private List<Entry<String, Long>> countWords (Scanner input) {
+        final Map<String, Long> wordCounts = new HashMap<>();
+        readWords(input).forEach(w -> {
+            if (isTaggable(w)) {
+                wordCounts.put(w, wordCounts.getOrDefault(w, 0L) + 1);
             }
-        }
-        myTagWords.addAll(wordCounts.entrySet());
+        });
+        return new ArrayList<>(wordCounts.entrySet());
     }
 
     // Sorts words alphabetically, keeping only those that appeared most often.
-    private void topWords (int numWordsToKeep, int groupSize) {
+    private List<Entry<String, Long>> topWords (List<Entry<String, Long>> tagWords,
+                                                   int numWordsToKeep,
+                                                   int groupSize) {
         // sort from most frequent to least
-        myTagWords.sort(new Comparator<Entry<String, Integer>>() {
-            @Override
-            public int compare (Entry<String, Integer> a, Entry<String, Integer> b) {
-                return b.getValue().compareTo(a.getValue());
-            }
-        });
+        tagWords.sort(Comparator.comparing(Entry<String, Long>::getValue).reversed());
         // keep only the top ones
-        myTagWords.subList(numWordsToKeep, myTagWords.size()).clear();
-        // convert frequencies into groups
-        for (int k = 0; k < myTagWords.size(); k++) {
-            Entry<String, Integer> word = myTagWords.get(k);
-            // Entry is immutable, so create a new one
-            myTagWords.set(k,
-                           new SimpleEntry<>(word.getKey(), word.getValue() / groupSize));
-        }
+        tagWords.subList(numWordsToKeep, tagWords.size()).clear();
+        // convert frequencies into groups (Entry is immutable, so create a new one)
+        tagWords = tagWords.stream()
+                           .map(w -> new SimpleEntry<>(w.getKey(), w.getValue() / groupSize))
+                           .collect(Collectors.toList());
         // sort alphabetically
-        myTagWords.sort(new Comparator<Entry<String, Integer>>() {
-            @Override
-            public int compare (Entry<String, Integer> a, Entry<String, Integer> b) {
-                return a.getKey().compareTo(b.getKey());
-            }
-        });
+        tagWords.sort(Comparator.comparing(Entry<String, Long>::getKey));
+        return tagWords;
     }
 
     // Return true if the given word should be tagged
@@ -114,11 +104,18 @@ public class WordCloud {
         return word.length() > 0 && !myCommonWords.contains(word);
     }
 
-    // Return string with leading and trailing punctuation removed from the given word
-    private String sanitize (String word) {
+    // Remove the leading and trailing punctuation from the given word
+    private static String sanitize (String word) {
         return word.replaceFirst("^" + PUNCTUATION, "")
                    .replaceFirst(PUNCTUATION + "$", "")
                    .toLowerCase();
+    }
+
+    // Read given input and returns its entire contents as a list of words
+    private List<String> readWords (Scanner input) {
+        return Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
+                     .map(WordCloud::sanitize)
+                     .collect(Collectors.toList());
     }
 
 
