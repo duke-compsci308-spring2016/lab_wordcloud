@@ -122,7 +122,7 @@ public class WordCloud {
                                       // TODO: add map and filter calls using parameters
         								.filter(select)
         								.map(xform)
-                                      .collect(Collectors.toList());
+        								.collect(Collectors.toList());
         	
         input.close();
         return contents;
