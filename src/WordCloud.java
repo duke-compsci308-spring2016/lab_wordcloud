@@ -121,7 +121,7 @@ public class WordCloud {
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
         							  .filter(select)
-                                      .map(w -> xform.apply(w))
+                                      .map(xform)
                                       .collect(Collectors.toList());
         input.close();
         return contents;
