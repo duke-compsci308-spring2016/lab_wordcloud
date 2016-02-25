@@ -119,9 +119,8 @@ public class WordCloud {
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
                                       // TODO: add map and filter calls using parameters
-                                      
-                                      .map(xform)
                                       .filter(select)
+                                      .map(xform)
                                       .collect(Collectors.toList());
         input.close();
         return contents;
