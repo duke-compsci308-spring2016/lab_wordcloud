@@ -86,7 +86,8 @@ public class WordCloud {
         myTagWords = myTagWords.stream()
                                // sort from most frequent to least
                                // TODO: add secondary comparison alphabetically based on word
-                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
+                               .sorted(Comparator.comparing(Entry<String, Long>::getValue)
+                            		   						.thenComparing(Entry<String, Long>::getKey).reversed())
                                // keep only the top ones
                                .limit(numWordsToKeep)
                                // convert frequencies into groups (Entry is immutable, so create a new one)
@@ -119,6 +120,8 @@ public class WordCloud {
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
                                       // TODO: add map and filter calls using parameters
+        							  .map(xform)
+        							  .filter(select)
                                       .collect(Collectors.toList());
         input.close();
         return contents;
@@ -126,10 +129,13 @@ public class WordCloud {
 
 
     public static void main (String[] args) {
+    	args = new String[]{"1000", "melville.txt"};
         if (args.length == 0) {
             System.out.println("Usage: #words file");
         }
         else {
+        	System.out.println(args[1]);
+        	System.out.println(args[0]);
             WordCloud cloud = new WordCloud(isTaggable(new Scanner(WordCloud.class.getResourceAsStream(DEFAULT_IGNORE_FILE))))
                                    .makeCloud(new Scanner(WordCloud.class.getResourceAsStream(args[1])),
                                               Integer.parseInt(args[0]),
