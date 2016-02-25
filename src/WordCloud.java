@@ -123,7 +123,6 @@ public class WordCloud {
         							.filter(select)
         							.map(xform)
                                       .collect(Collectors.toList());
-        
         input.close();
         return contents;
     }
