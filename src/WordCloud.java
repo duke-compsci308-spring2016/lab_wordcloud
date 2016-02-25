@@ -85,8 +85,8 @@ public class WordCloud {
     private WordCloud topWords (int numWordsToKeep, int groupSize) {
         myTagWords = myTagWords.stream()
                                // sort from most frequent to least
-                               // TODO: add secondary comparison alphabetically based on word
-                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
+                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed()
+                            		   .thenComparing(Comparator.comparing(Entry<String, Long>::getKey)))
                                // keep only the top ones
                                .limit(numWordsToKeep)
                                // convert frequencies into groups (Entry is immutable, so create a new one)
@@ -118,7 +118,8 @@ public class WordCloud {
                                            UnaryOperator<String> xform,
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
-                                      // TODO: add map and filter calls using parameters
+        							  .filter(select)
+        							  .map(w -> xform.apply(w))
                                       .collect(Collectors.toList());
         input.close();
         return contents;
