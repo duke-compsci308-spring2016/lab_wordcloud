@@ -1,3 +1,6 @@
+// Carolyn Yao cy88
+// Bruna Liborio bml27
+
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +89,7 @@ public class WordCloud {
         myTagWords = myTagWords.stream()
                                // sort from most frequent to least
                                // TODO: add secondary comparison alphabetically based on word
-                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
+                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed().thenComparing(Entry<String, Long>::getKey))
                                // keep only the top ones
                                .limit(numWordsToKeep)
                                // convert frequencies into groups (Entry is immutable, so create a new one)
@@ -119,6 +122,8 @@ public class WordCloud {
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
                                       // TODO: add map and filter calls using parameters
+        							  .map(xform)
+        							  .filter(select)
                                       .collect(Collectors.toList());
         input.close();
         return contents;
