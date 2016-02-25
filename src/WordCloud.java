@@ -63,10 +63,10 @@ public class WordCloud {
     public String toString () {
         return Stream.of(HTMLPage.startPage(DEFAULT_NUM_GROUPS, DEFAULT_MIN_FONT, DEFAULT_INCREMENT),
                          myTagWords.stream()
-                                   .map(HTMLPage::formatWord)
-                                   .collect(Collectors.joining(" ")),
+                         .map(HTMLPage::formatWord)
+                         .collect(Collectors.joining(" ")),
                          HTMLPage.endPage())
-                     .collect(Collectors.joining("\n"));
+                .collect(Collectors.joining("\n"));
     }
 
     // Reads given text file and counts non-common words it contains.
@@ -84,16 +84,18 @@ public class WordCloud {
     // Sorts words alphabetically, keeping only those that appeared most often.
     private WordCloud topWords (int numWordsToKeep, int groupSize) {
         myTagWords = myTagWords.stream()
-                               // sort from most frequent to least
-                               // TODO: add secondary comparison alphabetically based on word
-                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
-                               // keep only the top ones
-                               .limit(numWordsToKeep)
-                               // convert frequencies into groups (Entry is immutable, so create a new one)
-                               .map(w -> new SimpleEntry<String, Long>(w.getKey(), w.getValue() / groupSize))
-                               // sort alphabetically
-                               .sorted(Comparator.comparing(Entry<String, Long>::getKey))
-                               .collect(Collectors.toList());
+                // sort from most frequent to least
+
+                .sorted(Comparator.comparing(Entry<String, Long>::getValue)
+                        .thenComparing(Entry<String, Long>::getKey)
+                        .reversed())
+                // keep only the top ones
+                .limit(numWordsToKeep)
+                // convert frequencies into groups (Entry is immutable, so create a new one)
+                .map(w -> new SimpleEntry<String, Long>(w.getKey(), w.getValue() / groupSize))
+                // sort alphabetically
+                .sorted(Comparator.comparing(Entry<String, Long>::getKey))
+                .collect(Collectors.toList());
         return this;
     }
 
@@ -109,8 +111,8 @@ public class WordCloud {
     // Remove the leading and trailing punctuation from the given word
     private static String sanitize (String word) {
         return word.replaceFirst("^" + PUNCTUATION, "")
-                   .replaceFirst(PUNCTUATION + "$", "")
-                   .toLowerCase();
+                .replaceFirst(PUNCTUATION + "$", "")
+                .toLowerCase();
     }
 
     // Read given input and returns its entire contents as a list of words
@@ -118,8 +120,10 @@ public class WordCloud {
                                            UnaryOperator<String> xform,
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
-                                      // TODO: add map and filter calls using parameters
-                                      .collect(Collectors.toList());
+
+                .filter(select)
+                .map(xform)
+                .collect(Collectors.toList());
         input.close();
         return contents;
     }
@@ -131,9 +135,9 @@ public class WordCloud {
         }
         else {
             WordCloud cloud = new WordCloud(isTaggable(new Scanner(WordCloud.class.getResourceAsStream(DEFAULT_IGNORE_FILE))))
-                                   .makeCloud(new Scanner(WordCloud.class.getResourceAsStream(args[1])),
-                                              Integer.parseInt(args[0]),
-                                              DEFAULT_NUM_GROUPS);
+                    .makeCloud(new Scanner(WordCloud.class.getResourceAsStream(args[1])),
+                               Integer.parseInt(args[0]),
+                               DEFAULT_NUM_GROUPS);
             System.out.println(cloud);
         }
     }
