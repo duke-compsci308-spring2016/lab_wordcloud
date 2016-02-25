@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * A visual representation for the number of times various words occur in a given document.
  *
- * In a word cloud, the most common English words are usually ignored (e.g. the, a, of), 
+ * In a word cloud, the most common English words are usually ignored (e.g. the, a, of),
  * since they do not give any useful information about the topic being visualized.
  *
  * @author Robert C Duvall
@@ -86,7 +86,9 @@ public class WordCloud {
         myTagWords = myTagWords.stream()
                                // sort from most frequent to least
                                // TODO: add secondary comparison alphabetically based on word
-                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
+        					   //.sorted(Comparator.comparing(Entry<String, Long>::getKey))
+
+                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).thenComparing(Entry<String,Long>::getKey).reversed())
                                // keep only the top ones
                                .limit(numWordsToKeep)
                                // convert frequencies into groups (Entry is immutable, so create a new one)
@@ -118,6 +120,13 @@ public class WordCloud {
                                            UnaryOperator<String> xform,
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
+        								//(Comparator.comparing(Entry<String, Long>::getValue).reversed())
+        								//.map(WordCloud::isTagglable.get(w ->))
+        								.map(WordCloud::sanitize)
+        								//.isTaggable()
+
+                // keep only the top one.
+
                                       // TODO: add map and filter calls using parameters
                                       .collect(Collectors.toList());
         input.close();
