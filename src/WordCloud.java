@@ -119,8 +119,11 @@ public class WordCloud {
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
                                       // TODO: add map and filter calls using parameters
-        							  .map(w -> xform.apply(w))
-        							  .filter(w -> select.test(w))
+        							  // filter FIRST (so you don't have to map/sanitize extra stuff)	
+        							  .filter(select) 
+        						      .map(xform) 
+//        							  .map(w -> xform.apply(w)) DONT DO THIS (it's a lambda inside of a lambda)
+//				  					  .filter(w -> select.test(w))
                                       .collect(Collectors.toList());
         input.close();
         return contents;
