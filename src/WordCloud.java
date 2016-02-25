@@ -120,7 +120,7 @@ public class WordCloud {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
                                       // TODO: add map and filter calls using parameters
                                       
-                                      .map(w -> xform.apply(w))
+                                      .map(xform)
                                       .filter(select)
                                       .collect(Collectors.toList());
         input.close();
