@@ -118,6 +118,8 @@ public class WordCloud {
                                            UnaryOperator<String> xform,
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
+        							.filter(w -> select.test(w))
+        							.map(w -> xform.apply(w))
                                       // TODO: add map and filter calls using parameters
                                       .collect(Collectors.toList());
         input.close();
