@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * A visual representation for the number of times various words occur in a given document.
  *
- * In a word cloud, the most common English words are usually ignored (e.g. the, a, of), 
+ * In a word cloud, the most common English words are usually ignored (e.g. the, a, of),
  * since they do not give any useful information about the topic being visualized.
  *
  * @author Robert C Duvall
@@ -38,7 +38,6 @@ public class WordCloud {
     private Predicate<String> mySelector;
     // words and the number of times each appears in the file
     private List<Entry<String, Long>> myTagWords;
-
 
     /**
      * Constructs an empty WordCloud.
@@ -61,12 +60,13 @@ public class WordCloud {
      */
     @Override
     public String toString () {
-        return Stream.of(HTMLPage.startPage(DEFAULT_NUM_GROUPS, DEFAULT_MIN_FONT, DEFAULT_INCREMENT),
-                         myTagWords.stream()
-                                   .map(HTMLPage::formatWord)
-                                   .collect(Collectors.joining(" ")),
-                         HTMLPage.endPage())
-                     .collect(Collectors.joining("\n"));
+        return Stream
+                .of(HTMLPage.startPage(DEFAULT_NUM_GROUPS, DEFAULT_MIN_FONT, DEFAULT_INCREMENT),
+                    myTagWords.stream()
+                            .map(HTMLPage::formatWord)
+                            .collect(Collectors.joining(" ")),
+                    HTMLPage.endPage())
+                .collect(Collectors.joining("\n"));
     }
 
     // Reads given text file and counts non-common words it contains.
@@ -74,26 +74,27 @@ public class WordCloud {
     // before it is counted.
     private WordCloud countWords (Scanner input) {
         myTagWords.addAll(readWords(input, WordCloud::sanitize, mySelector).stream()
-                          // create a map from word to word frequency
-                          .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-                          // stream the set of word to word frequency mappings
-                          .entrySet());
+                // create a map from word to word frequency
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                // stream the set of word to word frequency mappings
+                .entrySet());
         return this;
     }
 
     // Sorts words alphabetically, keeping only those that appeared most often.
     private WordCloud topWords (int numWordsToKeep, int groupSize) {
         myTagWords = myTagWords.stream()
-                               // sort from most frequent to least
-                               // TODO: add secondary comparison alphabetically based on word
-                               .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
-                               // keep only the top ones
-                               .limit(numWordsToKeep)
-                               // convert frequencies into groups (Entry is immutable, so create a new one)
-                               .map(w -> new SimpleEntry<String, Long>(w.getKey(), w.getValue() / groupSize))
-                               // sort alphabetically
-                               .sorted(Comparator.comparing(Entry<String, Long>::getKey))
-                               .collect(Collectors.toList());
+                // sort from most frequent to least
+                // TODO: add secondary comparison alphabetically based on word
+                .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed()
+                        .thenComparing(Entry<String, Long>::getKey))
+                // keep only the top ones
+                .limit(numWordsToKeep)
+                // convert frequencies into groups (Entry is immutable, so create a new one)
+                .map(w -> new SimpleEntry<String, Long>(w.getKey(), w.getValue() / groupSize))
+                // sort alphabetically
+                .sorted(Comparator.comparing(Entry<String, Long>::getKey))
+                .collect(Collectors.toList());
         return this;
     }
 
@@ -109,31 +110,36 @@ public class WordCloud {
     // Remove the leading and trailing punctuation from the given word
     private static String sanitize (String word) {
         return word.replaceFirst("^" + PUNCTUATION, "")
-                   .replaceFirst(PUNCTUATION + "$", "")
-                   .toLowerCase();
+                .replaceFirst(PUNCTUATION + "$", "")
+                .toLowerCase();
     }
 
     // Read given input and returns its entire contents as a list of words
     private static List<String> readWords (Scanner input,
                                            UnaryOperator<String> xform,
                                            Predicate<String> select) {
-        List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
-                                      // TODO: add map and filter calls using parameters
-                                      .collect(Collectors.toList());
+        List<String> contents =
+                Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
+                        // TODO: add map and filter calls using parameters
+                        .filter(select)
+                        .map(xform)
+                        .collect(Collectors.toList());
         input.close();
         return contents;
     }
-
 
     public static void main (String[] args) {
         if (args.length == 0) {
             System.out.println("Usage: #words file");
         }
         else {
-            WordCloud cloud = new WordCloud(isTaggable(new Scanner(WordCloud.class.getResourceAsStream(DEFAULT_IGNORE_FILE))))
-                                   .makeCloud(new Scanner(WordCloud.class.getResourceAsStream(args[1])),
-                                              Integer.parseInt(args[0]),
-                                              DEFAULT_NUM_GROUPS);
+            WordCloud cloud =
+                    new WordCloud(isTaggable(new Scanner(WordCloud.class
+                            .getResourceAsStream(DEFAULT_IGNORE_FILE))))
+                                    .makeCloud(new Scanner(WordCloud.class
+                                            .getResourceAsStream(args[1])),
+                                               Integer.parseInt(args[0]),
+                                               DEFAULT_NUM_GROUPS);
             System.out.println(cloud);
         }
     }
