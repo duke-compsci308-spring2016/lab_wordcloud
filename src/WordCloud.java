@@ -86,6 +86,7 @@ public class WordCloud {
         myTagWords = myTagWords.stream()
                                // sort from most frequent to least
                                // TODO: add secondary comparison alphabetically based on word
+        					   .sorted(Comparator.comparing(Entry<String, Long>::getKey))
                                .sorted(Comparator.comparing(Entry<String, Long>::getValue).reversed())
                                // keep only the top ones
                                .limit(numWordsToKeep)
@@ -119,6 +120,8 @@ public class WordCloud {
                                            Predicate<String> select) {
         List<String> contents = Arrays.stream(input.useDelimiter(END_OF_FILE).next().split(WHITESPACE))
                                       // TODO: add map and filter calls using parameters
+        							  .map(o->xform.apply(o))
+        							  .filter(select)
                                       .collect(Collectors.toList());
         input.close();
         return contents;
