@@ -87,8 +87,9 @@ public class WordCloud {
                 // sort from most frequent to least
 
                 .sorted(Comparator.comparing(Entry<String, Long>::getValue)
+                        .reversed()
                         .thenComparing(Entry<String, Long>::getKey)
-                        .reversed())
+                        )
                 // keep only the top ones
                 .limit(numWordsToKeep)
                 // convert frequencies into groups (Entry is immutable, so create a new one)
